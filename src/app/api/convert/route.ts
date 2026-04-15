@@ -8,7 +8,7 @@ const DOWNLOAD_DIR = "/tmp/ytdl";
 
 const ALLOWED_BITRATES = new Set(["64k", "128k", "192k", "256k", "320k"]);
 const ALLOWED_SAMPLE_RATES = new Set(["22050", "44100", "48000", "96000"]);
-const ALLOWED_EXT = new Set([".mp3", ".m4a", ".aac", ".flac", ".ogg", ".opus", ".wav"]);
+const ALLOWED_FORMATS = new Set(["mp3", "m4a", "aac", "flac", "ogg", "opus", "wav"]);
 
 function safeFilename(name: string): string | null {
   const base = path.basename(name);
@@ -17,14 +17,22 @@ function safeFilename(name: string): string | null {
 }
 
 export async function POST(req: NextRequest) {
-  const { filename, bitrate, sampleRate } = await req.json();
+  const { filename, bitrate, sampleRate, outputFormat } = await req.json();
 
   const safe = safeFilename(filename);
   if (!safe) {
     return Response.json({ error: "Invalid filename" }, { status: 400 });
   }
 
-  if (!ALLOWED_BITRATES.has(bitrate)) {
+  const resolvedFormat: string = (() => {
+    if (outputFormat && ALLOWED_FORMATS.has(outputFormat)) return outputFormat;
+    const inputExt = path.extname(safe).toLowerCase().slice(1);
+    return ALLOWED_FORMATS.has(inputExt) ? inputExt : "mp3";
+  })();
+
+  const isWav = resolvedFormat === "wav";
+
+  if (!isWav && !ALLOWED_BITRATES.has(bitrate)) {
     return Response.json({ error: "Invalid bitrate" }, { status: 400 });
   }
 
@@ -37,13 +45,13 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "File not found" }, { status: 404 });
   }
 
-  const inputExt = path.extname(safe).toLowerCase();
-  const outputExt = ALLOWED_EXT.has(inputExt) && inputExt !== ".wav" ? inputExt : ".mp3";
-  const outputFilename = `${randomUUID()}${outputExt}`;
+  const outputFilename = `${randomUUID()}.${resolvedFormat}`;
   const outputPath = path.join(DOWNLOAD_DIR, outputFilename);
 
   const arArgs = sampleRate ? ["-ar", sampleRate] : [];
-  const ffmpegArgs = ["-i", inputPath, "-b:a", bitrate, ...arArgs, "-y", outputPath];
+  // WAV = PCM lossless: force pcm_s16le for proper header, skip bitrate
+  const codecArgs = isWav ? ["-c:a", "pcm_s16le"] : ["-b:a", bitrate];
+  const ffmpegArgs = ["-i", inputPath, ...codecArgs, ...arArgs, "-y", outputPath];
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({

@@ -43,6 +43,16 @@ const CONVERT_BITRATE_OPTIONS = [
   { id: "320k", label: "320K" },
 ];
 
+const CONVERT_FORMAT_OPTIONS = [
+  { id: "mp3", label: "MP3" },
+  { id: "m4a", label: "M4A" },
+  { id: "aac", label: "AAC" },
+  { id: "flac", label: "FLAC" },
+  { id: "ogg", label: "OGG" },
+  { id: "opus", label: "OPUS" },
+  { id: "wav", label: "WAV" },
+];
+
 const SAMPLE_RATE_OPTIONS = [
   { id: "", label: "DEFAULT" },
   { id: "22050", label: "22.05K" },
@@ -264,6 +274,7 @@ export default function Home() {
 
   // ── Convert state ──
   const [convertFile, setConvertFile] = useState<File | null>(null);
+  const [cvOutputFormat, setCvOutputFormat] = useState("mp3");
   const [convertBitrate, setConvertBitrate] = useState("192k");
   const [cvSampleRate, setCvSampleRate] = useState("");
   const [converting, setConverting] = useState(false);
@@ -395,7 +406,7 @@ export default function Home() {
       const res = await fetch("/api/convert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: uploadedFilename, bitrate: convertBitrate, sampleRate: cvSampleRate || undefined }),
+        body: JSON.stringify({ filename: uploadedFilename, bitrate: convertBitrate, sampleRate: cvSampleRate || undefined, outputFormat: cvOutputFormat }),
       });
 
       if (!res.body) {
@@ -700,6 +711,11 @@ export default function Home() {
                     setCvLogs([]);
                     setCvFilename(null);
                     setCvError(false);
+                    if (f) {
+                      const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
+                      const known = ["mp3", "m4a", "aac", "flac", "ogg", "opus", "wav"];
+                      setCvOutputFormat(known.includes(ext) ? ext : "mp3");
+                    }
                   }}
                   style={{ display: "none" }}
                 />
@@ -718,17 +734,31 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Bitrate Selector */}
+            {/* Output Format Selector */}
             <section style={{ marginBottom: "32px" }}>
-              <p style={labelStyle}>Target Bitrate</p>
+              <p style={labelStyle}>Output Format</p>
               <SelectorGrid
-                options={CONVERT_BITRATE_OPTIONS}
-                value={convertBitrate}
-                onChange={setConvertBitrate}
+                options={CONVERT_FORMAT_OPTIONS}
+                value={cvOutputFormat}
+                onChange={setCvOutputFormat}
                 disabled={converting}
-                columns={5}
+                columns={7}
               />
             </section>
+
+            {/* Bitrate Selector (not shown for WAV) */}
+            {cvOutputFormat !== "wav" && (
+              <section style={{ marginBottom: "32px" }}>
+                <p style={labelStyle}>Target Bitrate</p>
+                <SelectorGrid
+                  options={CONVERT_BITRATE_OPTIONS}
+                  value={convertBitrate}
+                  onChange={setConvertBitrate}
+                  disabled={converting}
+                  columns={5}
+                />
+              </section>
+            )}
 
             {/* Sample Rate Selector */}
             <section style={{ marginBottom: "32px" }}>
