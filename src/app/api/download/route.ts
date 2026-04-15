@@ -12,7 +12,7 @@ function ensureDir() {
   }
 }
 
-function buildArgs(format: string, outputTemplate: string, url: string): string[] {
+function buildArgs(format: string, outputTemplate: string, url: string, bitrate?: string): string[] {
   const base = ["--no-playlist", "-o", outputTemplate, "--newline"];
 
   switch (format) {
@@ -36,18 +36,14 @@ function buildArgs(format: string, outputTemplate: string, url: string): string[
         "mp4",
         url,
       ];
-    case "m4a":
-      return [
-        ...base,
-        "-f",
-        "bestaudio[ext=m4a]/bestaudio",
-        "--extract-audio",
-        "--audio-format",
-        "m4a",
-        url,
-      ];
-    case "mp3":
-      return [...base, "-f", "bestaudio", "-x", "--audio-format", "mp3", url];
+    case "m4a": {
+      const q = bitrate ? ["--audio-quality", bitrate] : [];
+      return [...base, "-f", "bestaudio[ext=m4a]/bestaudio", "--extract-audio", "--audio-format", "m4a", ...q, url];
+    }
+    case "mp3": {
+      const q = ["--audio-quality", bitrate || "0"];
+      return [...base, "-f", "bestaudio", "-x", "--audio-format", "mp3", ...q, url];
+    }
     case "wav":
       return [...base, "-f", "bestaudio", "-x", "--audio-format", "wav", url];
     default:
@@ -56,7 +52,7 @@ function buildArgs(format: string, outputTemplate: string, url: string): string[
 }
 
 export async function POST(req: NextRequest) {
-  const { url, format } = await req.json();
+  const { url, format, bitrate } = await req.json();
 
   if (!url) {
     return Response.json({ error: "URL required" }, { status: 400 });
@@ -66,7 +62,7 @@ export async function POST(req: NextRequest) {
 
   const uuid = randomUUID();
   const outputTemplate = path.join(DOWNLOAD_DIR, `${uuid}.%(ext)s`);
-  const args = buildArgs(format ?? "mp4-high", outputTemplate, url);
+  const args = buildArgs(format ?? "mp4-high", outputTemplate, url, bitrate);
 
   const encoder = new TextEncoder();
 
