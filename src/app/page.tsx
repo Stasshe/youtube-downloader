@@ -43,6 +43,14 @@ const CONVERT_BITRATE_OPTIONS = [
   { id: "320k", label: "320K" },
 ];
 
+const SAMPLE_RATE_OPTIONS = [
+  { id: "", label: "DEFAULT" },
+  { id: "22050", label: "22.05K" },
+  { id: "44100", label: "44.1K" },
+  { id: "48000", label: "48K" },
+  { id: "96000", label: "96K" },
+];
+
 const AUDIO_FORMATS: Format[] = ["mp3", "m4a"];
 
 function formatDuration(sec: number): string {
@@ -243,6 +251,7 @@ export default function Home() {
   const [url, setUrl] = useState("");
   const [format, setFormat] = useState<Format>("mp4-high");
   const [dlBitrate, setDlBitrate] = useState("");
+  const [dlSampleRate, setDlSampleRate] = useState("");
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [infoLoading, setInfoLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -256,6 +265,7 @@ export default function Home() {
   // ── Convert state ──
   const [convertFile, setConvertFile] = useState<File | null>(null);
   const [convertBitrate, setConvertBitrate] = useState("192k");
+  const [cvSampleRate, setCvSampleRate] = useState("");
   const [converting, setConverting] = useState(false);
   const [cvLogs, setCvLogs] = useState<LogEntry[]>([]);
   const [cvFilename, setCvFilename] = useState<string | null>(null);
@@ -314,7 +324,10 @@ export default function Home() {
 
   const handleFormatChange = (f: string) => {
     setFormat(f as Format);
-    if (!AUDIO_FORMATS.includes(f as Format)) setDlBitrate("");
+    if (!AUDIO_FORMATS.includes(f as Format)) {
+      setDlBitrate("");
+      setDlSampleRate("");
+    }
   };
 
   const handleDownload = async () => {
@@ -329,7 +342,7 @@ export default function Home() {
       const res = await fetch("/api/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim(), format, bitrate: dlBitrate || undefined }),
+        body: JSON.stringify({ url: url.trim(), format, bitrate: dlBitrate || undefined, sampleRate: dlSampleRate || undefined }),
       });
 
       if (!res.body) {
@@ -382,7 +395,7 @@ export default function Home() {
       const res = await fetch("/api/convert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: uploadedFilename, bitrate: convertBitrate }),
+        body: JSON.stringify({ filename: uploadedFilename, bitrate: convertBitrate, sampleRate: cvSampleRate || undefined }),
       });
 
       if (!res.body) {
@@ -565,18 +578,30 @@ export default function Home() {
               />
             </section>
 
-            {/* Bitrate Selector (audio only) */}
+            {/* Bitrate + Sample Rate Selectors (audio only) */}
             {showBitrate && (
-              <section style={{ marginBottom: "32px" }} className="animate-slide-up">
-                <p style={labelStyle}>Bitrate</p>
-                <SelectorGrid
-                  options={DOWNLOAD_BITRATE_OPTIONS}
-                  value={dlBitrate}
-                  onChange={setDlBitrate}
-                  disabled={downloading}
-                  columns={5}
-                />
-              </section>
+              <>
+                <section style={{ marginBottom: "32px" }} className="animate-slide-up">
+                  <p style={labelStyle}>Bitrate</p>
+                  <SelectorGrid
+                    options={DOWNLOAD_BITRATE_OPTIONS}
+                    value={dlBitrate}
+                    onChange={setDlBitrate}
+                    disabled={downloading}
+                    columns={5}
+                  />
+                </section>
+                <section style={{ marginBottom: "32px" }}>
+                  <p style={labelStyle}>Sample Rate</p>
+                  <SelectorGrid
+                    options={SAMPLE_RATE_OPTIONS}
+                    value={dlSampleRate}
+                    onChange={setDlSampleRate}
+                    disabled={downloading}
+                    columns={5}
+                  />
+                </section>
+              </>
             )}
 
             {/* Download Button */}
@@ -700,6 +725,18 @@ export default function Home() {
                 options={CONVERT_BITRATE_OPTIONS}
                 value={convertBitrate}
                 onChange={setConvertBitrate}
+                disabled={converting}
+                columns={5}
+              />
+            </section>
+
+            {/* Sample Rate Selector */}
+            <section style={{ marginBottom: "32px" }}>
+              <p style={labelStyle}>Sample Rate</p>
+              <SelectorGrid
+                options={SAMPLE_RATE_OPTIONS}
+                value={cvSampleRate}
+                onChange={setCvSampleRate}
                 disabled={converting}
                 columns={5}
               />

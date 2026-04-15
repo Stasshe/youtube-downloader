@@ -12,12 +12,13 @@ function ensureDir() {
   }
 }
 
-function buildArgs(format: string, outputTemplate: string, url: string, bitrate?: string): string[] {
+function buildArgs(format: string, outputTemplate: string, url: string, bitrate?: string, sampleRate?: string): string[] {
   const base = ["--no-playlist", "-o", outputTemplate, "--newline"];
+  const sr = sampleRate ? ["--postprocessor-args", `ffmpeg:-ar ${sampleRate}`] : [];
 
   switch (format) {
     case "mp4-high":
-      return [...base, "-f", "bestvideo+bestaudio/best", "--merge-output-format", "mp4", url];
+      return [...base, "-f", "bestvideo+bestaudio/best", "--merge-output-format", "mp4", ...sr, url];
     case "mp4-medium":
       return [
         ...base,
@@ -25,6 +26,7 @@ function buildArgs(format: string, outputTemplate: string, url: string, bitrate?
         "bestvideo[height<=720]+bestaudio/best[height<=720]",
         "--merge-output-format",
         "mp4",
+        ...sr,
         url,
       ];
     case "mp4-low":
@@ -34,25 +36,26 @@ function buildArgs(format: string, outputTemplate: string, url: string, bitrate?
         "bestvideo[height<=480]+bestaudio/best[height<=480]",
         "--merge-output-format",
         "mp4",
+        ...sr,
         url,
       ];
     case "m4a": {
       const q = bitrate ? ["--audio-quality", bitrate] : [];
-      return [...base, "-f", "bestaudio[ext=m4a]/bestaudio", "--extract-audio", "--audio-format", "m4a", ...q, url];
+      return [...base, "-f", "bestaudio[ext=m4a]/bestaudio", "--extract-audio", "--audio-format", "m4a", ...q, ...sr, url];
     }
     case "mp3": {
       const q = ["--audio-quality", bitrate || "0"];
-      return [...base, "-f", "bestaudio", "-x", "--audio-format", "mp3", ...q, url];
+      return [...base, "-f", "bestaudio", "-x", "--audio-format", "mp3", ...q, ...sr, url];
     }
     case "wav":
-      return [...base, "-f", "bestaudio", "-x", "--audio-format", "wav", url];
+      return [...base, "-f", "bestaudio", "-x", "--audio-format", "wav", ...sr, url];
     default:
       return [...base, "-f", "best", url];
   }
 }
 
 export async function POST(req: NextRequest) {
-  const { url, format, bitrate } = await req.json();
+  const { url, format, bitrate, sampleRate } = await req.json();
 
   if (!url) {
     return Response.json({ error: "URL required" }, { status: 400 });
@@ -62,7 +65,7 @@ export async function POST(req: NextRequest) {
 
   const uuid = randomUUID();
   const outputTemplate = path.join(DOWNLOAD_DIR, `${uuid}.%(ext)s`);
-  const args = buildArgs(format ?? "mp4-high", outputTemplate, url, bitrate);
+  const args = buildArgs(format ?? "mp4-high", outputTemplate, url, bitrate, sampleRate);
 
   const encoder = new TextEncoder();
 

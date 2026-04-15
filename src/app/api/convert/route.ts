@@ -7,6 +7,7 @@ import type { NextRequest } from "next/server";
 const DOWNLOAD_DIR = "/tmp/ytdl";
 
 const ALLOWED_BITRATES = new Set(["64k", "128k", "192k", "256k", "320k"]);
+const ALLOWED_SAMPLE_RATES = new Set(["22050", "44100", "48000", "96000"]);
 const ALLOWED_EXT = new Set([".mp3", ".m4a", ".aac", ".flac", ".ogg", ".opus", ".wav"]);
 
 function safeFilename(name: string): string | null {
@@ -16,7 +17,7 @@ function safeFilename(name: string): string | null {
 }
 
 export async function POST(req: NextRequest) {
-  const { filename, bitrate } = await req.json();
+  const { filename, bitrate, sampleRate } = await req.json();
 
   const safe = safeFilename(filename);
   if (!safe) {
@@ -25,6 +26,10 @@ export async function POST(req: NextRequest) {
 
   if (!ALLOWED_BITRATES.has(bitrate)) {
     return Response.json({ error: "Invalid bitrate" }, { status: 400 });
+  }
+
+  if (sampleRate && !ALLOWED_SAMPLE_RATES.has(sampleRate)) {
+    return Response.json({ error: "Invalid sample rate" }, { status: 400 });
   }
 
   const inputPath = path.join(DOWNLOAD_DIR, safe);
@@ -37,7 +42,8 @@ export async function POST(req: NextRequest) {
   const outputFilename = `${randomUUID()}${outputExt}`;
   const outputPath = path.join(DOWNLOAD_DIR, outputFilename);
 
-  const ffmpegArgs = ["-i", inputPath, "-b:a", bitrate, "-y", outputPath];
+  const arArgs = sampleRate ? ["-ar", sampleRate] : [];
+  const ffmpegArgs = ["-i", inputPath, "-b:a", bitrate, ...arArgs, "-y", outputPath];
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
