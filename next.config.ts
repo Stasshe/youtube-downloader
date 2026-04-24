@@ -11,10 +11,6 @@ if (basePathEnv && !basePathEnv.startsWith('/')) {
 const configuredBasePath = basePathEnv || undefined;
 // 開発環境でも静的エクスポートに近い動作をさせるために共通設定を定義
 const commonConfig = {
-  // 画像設定
-  images: {
-    unoptimized: true, // 静的エクスポートでは必須
-  },
   env: {
     NEXT_PUBLIC_IS_PRODUCTION_BUILD: String(isProductionBuild),
     NEXT_PUBLIC_BASE_PATH: basePathEnv,
@@ -24,16 +20,8 @@ const commonConfig = {
 };
 
 const nextConfig = {
-  // 共通設定を適用
   ...commonConfig,
-
-  // 本番ビルドモード時のみ静的エクスポートを有効化
-  output: isProductionBuild ? 'export' : undefined,
   trailingSlash: isProductionBuild,
-  // 静的エクスポート時のみ必要な設定
-  images: {
-    unoptimized: true,
-  },
   typescript: {
     ignoreBuildErrors: isProductionBuild,
   },
