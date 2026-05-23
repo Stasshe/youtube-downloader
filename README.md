@@ -11,5 +11,5 @@ static site, and dont use dynamic param.
   定した感じで。デザインは、少なくともAIっぽいやつはきらいだな。                                   
 ─────────────────────────────────────────────────────────────────────
 
-  pip install yt-dlp --break-system-packages   
+  uv sync
   sudo apt install ffmpeg

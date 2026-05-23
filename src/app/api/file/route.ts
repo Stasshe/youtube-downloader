@@ -1,8 +1,7 @@
+import { DOWNLOAD_DIR } from "@/lib/ytdlp";
+import type { NextRequest } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import type { NextRequest } from "next/server";
-
-const DOWNLOAD_DIR = "/tmp/ytdl";
 
 const MIME_TYPES: Record<string, string> = {
   mp4: "video/mp4",

@@ -1,18 +1,11 @@
+import { DOWNLOAD_DIR, ensureDownloadDir } from "@/lib/ytdlp";
+import type { NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import type { NextRequest } from "next/server";
-
-const DOWNLOAD_DIR = "/tmp/ytdl";
-
-function ensureDir() {
-  if (!fs.existsSync(DOWNLOAD_DIR)) {
-    fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
-  }
-}
 
 export async function POST(req: NextRequest) {
-  ensureDir();
+  ensureDownloadDir();
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;

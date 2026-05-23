@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawnYtDlp } from "@/lib/ytdlp";
 import type { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -9,24 +9,28 @@ export async function POST(req: NextRequest) {
   }
 
   return new Promise<Response>((resolve) => {
-    const proc = spawn("yt-dlp", ["--dump-json", "--no-playlist", "--no-warnings", url]);
+    const proc = spawnYtDlp(["--dump-json", "--no-playlist", "--no-warnings", url]);
 
     let output = "";
     let errorOutput = "";
 
-    proc.stdout.on("data", (chunk: Buffer) => {
-      output += chunk.toString();
-    });
+    if (proc.stdout) {
+      proc.stdout.on("data", (chunk: Buffer) => {
+        output += chunk.toString();
+      });
+    }
 
-    proc.stderr.on("data", (chunk: Buffer) => {
-      errorOutput += chunk.toString();
-    });
+    if (proc.stderr) {
+      proc.stderr.on("data", (chunk: Buffer) => {
+        errorOutput += chunk.toString();
+      });
+    }
 
     proc.on("error", (err: NodeJS.ErrnoException) => {
       if (err.code === "ENOENT") {
         resolve(
           Response.json(
-            { error: "yt-dlp not found. Install: pip install yt-dlp" },
+            { error: "yt-dlp not found. Install dependencies with: uv sync" },
             { status: 500 },
           ),
         );

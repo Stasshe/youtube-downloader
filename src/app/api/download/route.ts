@@ -1,16 +1,8 @@
-import { spawn } from "node:child_process";
+import { DOWNLOAD_DIR, ensureDownloadDir, spawnYtDlp } from "@/lib/ytdlp";
+import type { NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import type { NextRequest } from "next/server";
-
-const DOWNLOAD_DIR = "/tmp/ytdl";
-
-function ensureDir() {
-  if (!fs.existsSync(DOWNLOAD_DIR)) {
-    fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
-  }
-}
 
 function buildArgs(format: string, outputTemplate: string, url: string, bitrate?: string, sampleRate?: string): string[] {
   const base = ["--no-playlist", "-o", outputTemplate, "--newline"];
@@ -61,7 +53,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "URL required" }, { status: 400 });
   }
 
-  ensureDir();
+  ensureDownloadDir();
 
   const uuid = randomUUID();
   const outputTemplate = path.join(DOWNLOAD_DIR, `${uuid}.%(ext)s`);
@@ -79,23 +71,27 @@ export async function POST(req: NextRequest) {
         }
       };
 
-      const proc = spawn("yt-dlp", args);
+      const proc = spawnYtDlp(args);
 
-      proc.stdout.on("data", (chunk: Buffer) => {
-        const text = chunk.toString().trim();
-        if (text) send({ type: "log", text });
-      });
+      if (proc.stdout) {
+        proc.stdout.on("data", (chunk: Buffer) => {
+          const text = chunk.toString().trim();
+          if (text) send({ type: "log", text });
+        });
+      }
 
-      proc.stderr.on("data", (chunk: Buffer) => {
-        const text = chunk.toString().trim();
-        if (text) send({ type: "log", text });
-      });
+      if (proc.stderr) {
+        proc.stderr.on("data", (chunk: Buffer) => {
+          const text = chunk.toString().trim();
+          if (text) send({ type: "log", text });
+        });
+      }
 
       proc.on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "ENOENT") {
           send({
             type: "error",
-            message: "yt-dlp not installed. Run: pip install yt-dlp",
+            message: "yt-dlp not installed. Run: uv sync",
           });
         } else {
           send({ type: "error", message: err.message });

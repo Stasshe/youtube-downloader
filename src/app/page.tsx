@@ -835,7 +835,7 @@ export default function Home() {
           }}
         >
           <span>yt-dlp + ffmpeg required</span>
-          <span style={{ fontFamily: "'DM Mono', monospace" }}>pip install yt-dlp</span>
+          <span style={{ fontFamily: "'DM Mono', monospace" }}>uv sync</span>
         </footer>
       </div>
     </main>

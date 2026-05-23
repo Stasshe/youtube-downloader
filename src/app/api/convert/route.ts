@@ -1,10 +1,9 @@
+import { DOWNLOAD_DIR } from "@/lib/ytdlp";
+import type { NextRequest } from "next/server";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import type { NextRequest } from "next/server";
-
-const DOWNLOAD_DIR = "/tmp/ytdl";
 
 const ALLOWED_BITRATES = new Set(["64k", "128k", "192k", "256k", "320k"]);
 const ALLOWED_SAMPLE_RATES = new Set(["22050", "44100", "48000", "96000"]);
