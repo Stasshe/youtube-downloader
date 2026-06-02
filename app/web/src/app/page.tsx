@@ -150,7 +150,14 @@ function LogPanel({
   return (
     <section className="animate-slide-up">
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-        <span style={{ fontSize: "11px", color: "var(--muted)", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+        <span
+          style={{
+            fontSize: "11px",
+            color: "var(--muted)",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+          }}
+        >
           Output
         </span>
         <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
@@ -353,7 +360,12 @@ export default function Home() {
       const res = await fetch("/api/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim(), format, bitrate: dlBitrate || undefined, sampleRate: dlSampleRate || undefined }),
+        body: JSON.stringify({
+          url: url.trim(),
+          format,
+          bitrate: dlBitrate || undefined,
+          sampleRate: dlSampleRate || undefined,
+        }),
       });
 
       if (!res.body) {
@@ -406,7 +418,12 @@ export default function Home() {
       const res = await fetch("/api/convert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: uploadedFilename, bitrate: convertBitrate, sampleRate: cvSampleRate || undefined, outputFormat: cvOutputFormat }),
+        body: JSON.stringify({
+          filename: uploadedFilename,
+          bitrate: convertBitrate,
+          sampleRate: cvSampleRate || undefined,
+          outputFormat: cvOutputFormat,
+        }),
       });
 
       if (!res.body) {
@@ -442,7 +459,9 @@ export default function Home() {
       <div style={{ width: "100%", maxWidth: "680px" }}>
         {/* Header */}
         <header style={{ marginBottom: "40px" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "12px", marginBottom: "4px" }}>
+          <div
+            style={{ display: "flex", alignItems: "baseline", gap: "12px", marginBottom: "4px" }}
+          >
             <h1
               style={{
                 fontFamily: "'Syne Mono', monospace",
@@ -454,13 +473,22 @@ export default function Home() {
             >
               yt-dlp
             </h1>
-            <span style={{ fontSize: "12px", color: "var(--muted)", letterSpacing: "0.08em" }}>downloader</span>
+            <span style={{ fontSize: "12px", color: "var(--muted)", letterSpacing: "0.08em" }}>
+              downloader
+            </span>
           </div>
           <div style={{ width: "100%", height: "1px", background: "var(--border)" }} />
         </header>
 
         {/* Mode Tabs */}
-        <nav style={{ display: "flex", gap: "0", marginBottom: "40px", borderBottom: "1px solid var(--border)" }}>
+        <nav
+          style={{
+            display: "flex",
+            gap: "0",
+            marginBottom: "40px",
+            borderBottom: "1px solid var(--border)",
+          }}
+        >
           {(["download", "convert"] as Mode[]).map((m) => {
             const active = mode === m;
             return (
@@ -502,7 +530,9 @@ export default function Home() {
                 type="text"
                 value={url}
                 onChange={handleUrlChange}
-                onKeyDown={(e) => { if (e.key === "Enter") handleDownload(); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleDownload();
+                }}
                 placeholder="https://www.youtube.com/watch?v=..."
                 disabled={downloading}
                 style={{
@@ -517,8 +547,12 @@ export default function Home() {
                   transition: "border-color 0.15s",
                   boxSizing: "border-box",
                 }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = "var(--accent-dim)"; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border2)"; }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "var(--accent-dim)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "var(--border2)";
+                }}
               />
             </section>
 
@@ -538,10 +572,26 @@ export default function Home() {
               >
                 {infoLoading && !videoInfo ? (
                   <>
-                    <div style={{ width: "80px", height: "45px", background: "var(--surface2)", flexShrink: 0 }} />
+                    <div
+                      style={{
+                        width: "80px",
+                        height: "45px",
+                        background: "var(--surface2)",
+                        flexShrink: 0,
+                      }}
+                    />
                     <div>
-                      <div style={{ width: "200px", height: "12px", background: "var(--surface2)", marginBottom: "6px" }} />
-                      <div style={{ width: "100px", height: "10px", background: "var(--surface2)" }} />
+                      <div
+                        style={{
+                          width: "200px",
+                          height: "12px",
+                          background: "var(--surface2)",
+                          marginBottom: "6px",
+                        }}
+                      />
+                      <div
+                        style={{ width: "100px", height: "10px", background: "var(--surface2)" }}
+                      />
                     </div>
                   </>
                 ) : videoInfo ? (
@@ -637,8 +687,13 @@ export default function Home() {
                   justifyContent: "center",
                   gap: "10px",
                 }}
-                onMouseEnter={(e) => { if (url.trim() && !downloading) e.currentTarget.style.background = "#e0a845"; }}
-                onMouseLeave={(e) => { if (url.trim() && !downloading) e.currentTarget.style.background = "var(--accent)"; }}
+                onMouseEnter={(e) => {
+                  if (url.trim() && !downloading) e.currentTarget.style.background = "#e0a845";
+                }}
+                onMouseLeave={(e) => {
+                  if (url.trim() && !downloading)
+                    e.currentTarget.style.background = "var(--accent)";
+                }}
               >
                 {downloading ? (
                   <>
@@ -662,7 +717,9 @@ export default function Home() {
               </button>
             </section>
 
-            {dlLogs.length > 0 && <LogPanel logs={dlLogs} loading={downloading} logRef={dlLogRef} />}
+            {dlLogs.length > 0 && (
+              <LogPanel logs={dlLogs} loading={downloading} logRef={dlLogRef} />
+            )}
             {dlFilename && <SaveButton filename={dlFilename} />}
           </>
         )}
@@ -794,8 +851,13 @@ export default function Home() {
                   justifyContent: "center",
                   gap: "10px",
                 }}
-                onMouseEnter={(e) => { if (convertFile && !converting) e.currentTarget.style.background = "#e0a845"; }}
-                onMouseLeave={(e) => { if (convertFile && !converting) e.currentTarget.style.background = "var(--accent)"; }}
+                onMouseEnter={(e) => {
+                  if (convertFile && !converting) e.currentTarget.style.background = "#e0a845";
+                }}
+                onMouseLeave={(e) => {
+                  if (convertFile && !converting)
+                    e.currentTarget.style.background = "var(--accent)";
+                }}
               >
                 {converting ? (
                   <>

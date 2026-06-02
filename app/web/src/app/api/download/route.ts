@@ -1,16 +1,30 @@
-import { ensureDownloadDir, getDownloadDir, spawnYtDlp } from "@/lib/ytdlp";
-import type { NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { ensureDownloadDir, getDownloadDir, spawnYtDlp } from "@/lib/ytdlp";
+import type { NextRequest } from "next/server";
 
-function buildArgs(format: string, outputTemplate: string, url: string, bitrate?: string, sampleRate?: string): string[] {
+function buildArgs(
+  format: string,
+  outputTemplate: string,
+  url: string,
+  bitrate?: string,
+  sampleRate?: string,
+): string[] {
   const base = ["--no-playlist", "-o", outputTemplate, "--newline"];
   const sr = sampleRate ? ["--postprocessor-args", `ffmpeg:-ar ${sampleRate}`] : [];
 
   switch (format) {
     case "mp4-high":
-      return [...base, "-f", "bestvideo+bestaudio/best", "--merge-output-format", "mp4", ...sr, url];
+      return [
+        ...base,
+        "-f",
+        "bestvideo+bestaudio/best",
+        "--merge-output-format",
+        "mp4",
+        ...sr,
+        url,
+      ];
     case "mp4-medium":
       return [
         ...base,
@@ -33,7 +47,17 @@ function buildArgs(format: string, outputTemplate: string, url: string, bitrate?
       ];
     case "m4a": {
       const q = bitrate ? ["--audio-quality", bitrate] : [];
-      return [...base, "-f", "bestaudio[ext=m4a]/bestaudio", "--extract-audio", "--audio-format", "m4a", ...q, ...sr, url];
+      return [
+        ...base,
+        "-f",
+        "bestaudio[ext=m4a]/bestaudio",
+        "--extract-audio",
+        "--audio-format",
+        "m4a",
+        ...q,
+        ...sr,
+        url,
+      ];
     }
     case "mp3": {
       const q = ["--audio-quality", bitrate || "0"];
@@ -102,7 +126,9 @@ export async function POST(req: NextRequest) {
 
       proc.on("close", (code: number | null) => {
         if (code === 0) {
-          const files = fs.readdirSync(/*turbopackIgnore: true*/ downloadDir).filter((f) => f.startsWith(uuid));
+          const files = fs
+            .readdirSync(/*turbopackIgnore: true*/ downloadDir)
+            .filter((f) => f.startsWith(uuid));
           if (files.length > 0) {
             send({ type: "complete", filename: files[0] });
           } else {

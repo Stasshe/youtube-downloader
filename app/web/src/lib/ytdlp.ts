@@ -1,4 +1,4 @@
-import { spawn, type SpawnOptions } from "node:child_process";
+import { type SpawnOptions, spawn } from "node:child_process";
 import fs from "node:fs";
 
 const PROJECT_ROOT_ENV = "YTDL_PROJECT_ROOT";
