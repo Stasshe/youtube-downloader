@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 1637",
-    "build": "next build",
-    "start": "next start -p 1637",
+    "dev": "YTDL_PROJECT_ROOT=$PWD YTDL_DOWNLOAD_DIR=$PWD/.data/ytdl next dev app/web -p 1637",
+    "build": "YTDL_PROJECT_ROOT=$PWD YTDL_DOWNLOAD_DIR=$PWD/.data/ytdl next build app/web",
+    "start": "YTDL_PROJECT_ROOT=$PWD YTDL_DOWNLOAD_DIR=$PWD/.data/ytdl next start app/web -p 1637",
     "python:sync": "uv sync",
-    "lint": "biome check src/",
-    "lint:fix": "biome check --write src/",
-    "format": "biome format --write src/"
+    "lint": "biome check app/web/src/",
+    "lint:fix": "biome check --write app/web/src/",
+    "format": "biome format --write app/web/src/"
   },
   "dependencies": {
     "next": "^16.2.1",

@@ -1,4 +1,4 @@
-import { DOWNLOAD_DIR } from "@/lib/ytdlp";
+import { getDownloadDir } from "@/lib/ytdlp";
 import type { NextRequest } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
@@ -20,18 +20,18 @@ export async function GET(req: NextRequest) {
     return Response.json({ error: "Invalid filename" }, { status: 400 });
   }
 
-  const filePath = path.join(DOWNLOAD_DIR, filename);
+  const filePath = path.join(/*turbopackIgnore: true*/ getDownloadDir(), filename);
 
-  if (!fs.existsSync(filePath)) {
+  if (!fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
     return Response.json({ error: "File not found" }, { status: 404 });
   }
 
-  const stat = fs.statSync(filePath);
+  const stat = fs.statSync(/*turbopackIgnore: true*/ filePath);
   const ext = path.extname(filename).slice(1).toLowerCase();
   const contentType = MIME_TYPES[ext] ?? "application/octet-stream";
 
   // Stream the file
-  const fileStream = fs.createReadStream(filePath);
+  const fileStream = fs.createReadStream(/*turbopackIgnore: true*/ filePath);
   const webStream = new ReadableStream({
     start(controller) {
       fileStream.on("data", (chunk: Buffer | string) => {
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
         controller.close();
         // Clean up after serving
         try {
-          fs.unlinkSync(filePath);
+          fs.unlinkSync(/*turbopackIgnore: true*/ filePath);
         } catch {}
       });
       fileStream.on("error", (err) => {

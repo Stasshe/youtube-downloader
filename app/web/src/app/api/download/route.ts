@@ -1,4 +1,4 @@
-import { DOWNLOAD_DIR, ensureDownloadDir, spawnYtDlp } from "@/lib/ytdlp";
+import { ensureDownloadDir, getDownloadDir, spawnYtDlp } from "@/lib/ytdlp";
 import type { NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
@@ -54,9 +54,10 @@ export async function POST(req: NextRequest) {
   }
 
   ensureDownloadDir();
+  const downloadDir = getDownloadDir();
 
   const uuid = randomUUID();
-  const outputTemplate = path.join(DOWNLOAD_DIR, `${uuid}.%(ext)s`);
+  const outputTemplate = path.join(/*turbopackIgnore: true*/ downloadDir, `${uuid}.%(ext)s`);
   const args = buildArgs(format ?? "mp4-high", outputTemplate, url, bitrate, sampleRate);
 
   const encoder = new TextEncoder();
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
 
       proc.on("close", (code: number | null) => {
         if (code === 0) {
-          const files = fs.readdirSync(DOWNLOAD_DIR).filter((f) => f.startsWith(uuid));
+          const files = fs.readdirSync(/*turbopackIgnore: true*/ downloadDir).filter((f) => f.startsWith(uuid));
           if (files.length > 0) {
             send({ type: "complete", filename: files[0] });
           } else {

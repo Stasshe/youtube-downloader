@@ -1,4 +1,4 @@
-import { DOWNLOAD_DIR } from "@/lib/ytdlp";
+import { getDownloadDir } from "@/lib/ytdlp";
 import type { NextRequest } from "next/server";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
@@ -39,13 +39,14 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Invalid sample rate" }, { status: 400 });
   }
 
-  const inputPath = path.join(DOWNLOAD_DIR, safe);
-  if (!fs.existsSync(inputPath)) {
+  const downloadDir = getDownloadDir();
+  const inputPath = path.join(/*turbopackIgnore: true*/ downloadDir, safe);
+  if (!fs.existsSync(/*turbopackIgnore: true*/ inputPath)) {
     return Response.json({ error: "File not found" }, { status: 404 });
   }
 
   const outputFilename = `${randomUUID()}.${resolvedFormat}`;
-  const outputPath = path.join(DOWNLOAD_DIR, outputFilename);
+  const outputPath = path.join(/*turbopackIgnore: true*/ downloadDir, outputFilename);
 
   const arArgs = sampleRate ? ["-ar", sampleRate] : [];
   // WAV = PCM lossless: force pcm_s16le for proper header, skip bitrate
